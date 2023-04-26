@@ -1,3 +1,4 @@
+// @ts-check
 "use strict";
 
 /**
@@ -9,6 +10,7 @@ import { fileURLToPath } from "url";
 import path from "path";
 import express from "express";
 import { Server } from "socket.io";
+// @ts-ignore
 import ICAL from "ical.js";
 
 const app = express();
@@ -24,15 +26,17 @@ app.get("/", (_req, res) => {
 });
 
 let unixTimeMs;
+/** @type {ICAL.Component[]} */
 let events;
+/** @type {string} */
 let isoString;
 lastDay();
 
 /**
  * Find the times in ISO.
  *
- * @param {string} inputString
- * @returns {string[]}
+ * @param {string} inputString - The string to find stuff in.
+ * @returns {string[]} - The list of matches.
  */
 function findISOTimes(inputString) {
   const regex =
@@ -48,16 +52,18 @@ function findISOTimes(inputString) {
 /**
  * Find the closest time in the future.
  *
- * @param {string[]} timeList
- * @returns {Date | string}
+ * @param {string[]} timeList - The times
+ * @returns {string} -
  */
 function findClosestFutureTime(timeList) {
   const now = new Date();
-  let closestFutureTime;
+  /** @type {Date} */
+  let closestFutureTime = now;
   let closestTimeDiff = Infinity;
 
   timeList.forEach((time) => {
     const dateTime = new Date(time);
+    // @ts-ignore
     const timeDiff = dateTime - now;
     if (timeDiff > 0 && timeDiff < closestTimeDiff) {
       closestFutureTime = dateTime;
@@ -65,7 +71,7 @@ function findClosestFutureTime(timeList) {
     }
   });
 
-  return closestFutureTime ? closestFutureTime.toISOString() : null;
+  return closestFutureTime.toISOString();
 }
 
 /**
@@ -80,7 +86,9 @@ function lastDay() {
     .then((response) => response.text())
     .then((data) => {
       // Parse the iCal file
+      /** @type {string} */
       const jcalData = ICAL.parse(data);
+      /** @type {ICAL.Component} */
       const vcalendar = new ICAL.Component(jcalData);
       // Get all the events from the iCal file
       events = vcalendar.getAllSubcomponents("vevent");
