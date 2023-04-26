@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Last Day for Students: https://calendar.google.com/calendar/ical/psdr3.org_3137383238353432373930%40resource.calendar.google.com/public/basic.ics.
  */
@@ -7,7 +9,7 @@ import { fileURLToPath } from "url";
 import path from "path";
 import express from "express";
 import { Server } from "socket.io";
-import ical from "ical.js";
+import ICAL from "ical.js";
 
 const app = express();
 const server = new http.Server(app);
@@ -21,11 +23,17 @@ app.get("/", (_req, res) => {
   res.sendFile(`${__dirname}/index.html`);
 });
 
-let unixTimeMs = 0;
-let events = null;
-let isoString = null;
+let unixTimeMs;
+let events;
+let isoString;
 lastDay();
 
+/**
+ * Find the times in ISO.
+ *
+ * @param {string} inputString
+ * @returns {string[]}
+ */
 function findISOTimes(inputString) {
   const regex =
     /"dtstart",\s*{\s*},\s*"date-time",\s*"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)"/g;
@@ -37,6 +45,12 @@ function findISOTimes(inputString) {
   return matches;
 }
 
+/**
+ * Find the closest time in the future.
+ *
+ * @param {string[]} timeList
+ * @returns {Date | string}
+ */
 function findClosestFutureTime(timeList) {
   const now = new Date();
   let closestFutureTime;
@@ -54,6 +68,9 @@ function findClosestFutureTime(timeList) {
   return closestFutureTime ? closestFutureTime.toISOString() : null;
 }
 
+/**
+ * Find the last day of school.
+ */
 function lastDay() {
   const icalUrl =
     "https://calendar.google.com/calendar/ical/psdr3.org_auvngjhbljjajucngr199vdrbs%40group.calendar.google.com/public/basic.ics";
@@ -63,8 +80,8 @@ function lastDay() {
     .then((response) => response.text())
     .then((data) => {
       // Parse the iCal file
-      const jcalData = ical.parse(data);
-      const vcalendar = new ical.Component(jcalData);
+      const jcalData = ICAL.parse(data);
+      const vcalendar = new ICAL.Component(jcalData);
       // Get all the events from the iCal file
       events = vcalendar.getAllSubcomponents("vevent");
       // Filter events based on summary containing "Last Day for Students"
@@ -101,15 +118,15 @@ function lastDay() {
 
       // Parse the date string and set the time
       const dateString = String(date.split("T")[0]);
-      const newdate = new Date(
+      const newDate = new Date(
         `${dateString}T${hour.toString().padStart(2, "0")}:${minute
           .toString()
           .padStart(2, "0")}:00`
       );
 
       // Convert the date to ISO format and UNIX time
-      isoString = newdate.toISOString();
-      unixTimeMs = newdate.getTime(); // returns UNIX time in milliseconds
+      isoString = newDate.toISOString();
+      unixTimeMs = newDate.getTime(); // returns UNIX time in milliseconds
       // output: 1685068740000 (or similar, depending on your timezone)
       // console.log(unixTimeMs);
       return unixTimeMs;
@@ -117,6 +134,12 @@ function lastDay() {
     .catch(() => {});
 }
 
+/**
+ * Make the list of days.
+ *
+ * @param {string} futureDateStr
+ * @returns {string[]}
+ */
 function createListOfDays(futureDateStr) {
   const today = new Date();
   const futureDate = new Date(futureDateStr);
@@ -134,6 +157,12 @@ function createListOfDays(futureDateStr) {
   return days;
 }
 
+/**
+ * Find the type of day.
+ *
+ * @param {string} inputStr
+ * @returns {string | null}
+ */
 function findDayType(inputStr) {
   const regex = /([a-cx])\s+day|mod\s+([a-cx])/i;
   const match = inputStr.match(regex);
@@ -154,6 +183,12 @@ function findDayType(inputStr) {
 //   // console.log(findDayType(JSON.stringify(filteredEvents3)));
 // }
 
+/**
+ * Find the number of days in the workweek.
+ *
+ * @param {string[]} days
+ * @returns {number}
+ */
 function weekDays(days) {
   // Initialize the count of working days.
   let count = 0;

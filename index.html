@@ -1,23 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-US">
   <head>
-    <title>Socket.IO chat</title>
+    <meta charset="utf-8" />
+    <title>Countdown!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <body onload="load()">
     <p>There are <span id="countdown">Offline</span> Days Left of School</p>
-    </form>
-    <script src="/socket.io/socket.io.js"></script>
 
-    <script>
-      var socket = io();
+    <script type="module">
+      "use strict";
+      import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js";
+      const socket = io();
 
-      socket.on('eoty', function(msg) {
-				document.getElementById("countdown").innerHTML = msg
+      socket.on("eoty", function (msg) {
+        document.getElementById("countdown").innerHTML = msg;
       });
-		function load(){
-			socket.emit("needLD")
-			console.log("emited")
-		}
+
+      function load() {
+        socket.emit("needLD");
+        // console.log("emited");
+      }
+      window.load = load;
     </script>
   </body>
 </html>
